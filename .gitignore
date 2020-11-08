@@ -1,0 +1,8 @@
+checkpoint/
+logs/
+results/
+samples/
+train_attention/
+wandb/
+__pycache__/
+.idea/
