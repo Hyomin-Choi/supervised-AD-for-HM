@@ -14,9 +14,9 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None): #0:e
     MSE = nn.MSELoss(reduction='mean').cuda()
     ce = torch.nn.BCELoss(reduction='mean').cuda()
 
-    loss_name = ['L1_loss', 'ABC_loss', 'N_adv_loss_G', 'N_adv_loss_D', 'patch_loss', 'Latent_loss',\
-                 'AN_adv_loss_G', 'AN_adv_loss_D','classifier_loss','classifier_acc','attention_loss']
-    loss_dict = {loss_name[0]:[],loss_name[1]:[],loss_name[2]:[],loss_name[3]:[],loss_name[4]:[],loss_name[5]:[],loss_name[6]:[],loss_name[7]:[],loss_name[8]:[],loss_name[9]:[],loss_name[10]:[]}
+    loss_name = ['L1_loss', 'ABC_loss', 'N_adv_loss_G', 'N_adv_loss_D','Latent_loss',]
+                 #'AN_adv_loss_G', 'AN_adv_loss_D','classifier_loss','classifier_acc','attention_loss']
+    loss_dict = {loss_name[0]:[],loss_name[1]:[],loss_name[2]:[],loss_name[3]:[],loss_name[4]:[]}#,loss_name[5]:[],loss_name[6]:[],loss_name[7]:[],loss_name[8]:[],loss_name[9]:[],loss_name[10]:[]}
     metrics = {}
 
     # feature_blobs = [] # (1,1024,8,8)
@@ -29,9 +29,52 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None): #0:e
         data = datas[0].cuda() if use_cuda else datas[0]
         label = datas[1].cuda() if use_cuda else datas[1]
 
-        encoder_out = models[0](data) #out6= 512,4,4
-        decoder_out = models[1](*encoder_out)
+        encoder_out_N = models[0](data[label==1]) #out6= 512,4,4
+        decoder_out_N = models[1](*encoder_out_N)
 
+        #update Discriminator
+        real_logit = models[2](data[label==1])
+        fake_logit = models[2](decoder_out_N)
+        Normal_D_loss = ( ce(real_logit, Variable(torch.ones(real_logit.shape).cuda(), requires_grad=False)) + \
+                                ce(fake_logit, Variable(torch.zeros(fake_logit.shape).cuda(), requires_grad=False))
+                        ) * 0.5
+        loss_dict['N_adv_loss_D'].append(Normal_D_loss.item())
+        Normal_D_loss = Normal_D_loss * args.N_adv_loss_D
+        models[2].zero_grad()
+        Normal_D_loss.backward(retain_graph=True)
+        optimizer[2].step()
+
+        #update Normal data
+        difference = L1(data[label==1], decoder_out_N)
+        recon_latent = models[0](decoder_out_N)[3]
+        latent_difference = L1(encoder_out_N[3], recon_latent)
+        fake_logit = models[2](decoder_out_N)
+        Normal_G_loss = ce(fake_logit, Variable(torch.ones(fake_logit.shape).cuda(), requires_grad=False))
+
+        loss_dict['L1_loss'].append(difference.item())
+        loss_dict['Latent_loss'].append(latent_difference.item())
+        loss_dict['N_adv_loss_G'].append(Normal_G_loss.item())
+        N_total_loss = difference * args.L1_loss + latent_difference * args.Latent_loss +  Normal_G_loss * args.N_adv_loss_G
+
+        models[0].zero_grad()
+        models[1].zero_grad()
+        N_total_loss.backward()
+        optimizer[0].step()
+        optimizer[1].step()
+
+        #update Anomaly data
+        encoder_out_AN = models[0](data[label == 0])  # out6= 512,4,4
+        decoder_out_AN = models[1](*encoder_out_AN)
+        difference = L1(data[label==0], decoder_out_AN)
+        difference = -torch.log(1 - torch.exp(-1 * difference))
+        loss_dict['ABC_loss'].append(difference.item())
+        AN_total_loss = difference * args.ABC_loss
+        models[0].zero_grad()
+        models[1].zero_grad()
+        AN_total_loss.backward()
+        optimizer[0].step()
+        optimizer[1].step()
+        '''
         #update Discriminator
         if label == 1: #normal
             real_logit = models[2](data)
@@ -45,7 +88,7 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None): #0:e
             models[2].zero_grad()
             Normal_D_loss.backward(retain_graph=True)
             optimizer[2].step()
-
+        
         elif label ==0: #anomaly
             real_logit = models[3](data)
             fake_logit = models[3](decoder_out)  # (1,1,14,14)
@@ -58,7 +101,7 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None): #0:e
             models[3].zero_grad()
             Anomaly_D_loss.backward(retain_graph=True)
             optimizer[3].step()
-
+        
         #update Generator
         difference = L1(data,decoder_out)
         if label == 1: #normal
@@ -79,7 +122,7 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None): #0:e
             N_total_loss.backward()
             optimizer[0].step()
             optimizer[1].step()
-
+        
         elif label == 0:#anomaly
             difference = -torch.log(1 - torch.exp(-1 * difference))
             fake_logit = models[3](decoder_out)
@@ -93,42 +136,45 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None): #0:e
             AN_total_loss.backward()
             optimizer[0].step()
             optimizer[1].step()
-
-        encoder_out = models[0](data)
-        classifier_out = models[4](encoder_out[-1].detach())
-        pred = torch.argmax(classifier_out[0], dim=1)
-        target = Variable(torch.zeros(classifier_out[0].shape).cuda(), requires_grad=False)
-        target[:, label] = 1.0
-        classifier_loss = ce(classifier_out[0], target)
-
-        weight_softmax = list(models[4].parameters())[-1]
-
-        cam = torch.matmul(weight_softmax, classifier_out[1])
-        N_cam = torch.sigmoid(cam[1, :].view(8, 8))
-        AN_cam = torch.sigmoid(cam[0, :].view(8, 8))#nn.functional.sigmoid
-        ones = Variable(torch.ones(N_cam.shape).cuda(), requires_grad=False)
-        attention_loss = torch.mean(ones - N_cam + AN_cam) *2
-
-        loss_dict['classifier_loss'].append(classifier_loss.item())
-        loss_dict['attention_loss'].append(attention_loss.item())
-        loss_dict['classifier_acc'].append(100) if pred == label else loss_dict['classifier_acc'].append(0)
-
-        models[4].zero_grad()
-
-        if label == 1:
-            classifier_loss.backward(retain_graph=True)
-            attention_loss.backward()
-        else:
-            classifier_loss.backward()
-        optimizer[4].step()
-
+        
+        # encoder_out = models[0](data)
+        # classifier_out = models[4](encoder_out[-1].detach())
+        # pred = torch.argmax(classifier_out[0], dim=1)
+        # target = Variable(torch.zeros(classifier_out[0].shape).cuda(), requires_grad=False)
+        # target[:, label] = 1.0
+        # classifier_loss = ce(classifier_out[0], target)
+        #
+        # weight_softmax = list(models[4].parameters())[-1]
+        #
+        # cam = torch.matmul(weight_softmax, classifier_out[1])
+        # N_cam = torch.sigmoid(cam[1, :].view(8, 8))
+        # AN_cam = torch.sigmoid(cam[0, :].view(8, 8))#nn.functional.sigmoid
+        # ones = Variable(torch.ones(N_cam.shape).cuda(), requires_grad=False)
+        # attention_loss = torch.mean(ones - N_cam + AN_cam) *2
+        #
+        # loss_dict['classifier_loss'].append(classifier_loss.item())
+        # loss_dict['attention_loss'].append(attention_loss.item())
+        # loss_dict['classifier_acc'].append(100) if pred == label else loss_dict['classifier_acc'].append(0)
+        #
+        # models[4].zero_grad()
+        #
+        # if label == 1:
+        #     classifier_loss.backward(retain_graph=True)
+        #     attention_loss.backward()
+        # else:
+        #     classifier_loss.backward()
+        # optimizer[4].step()
+        '''
         if idx % args.print_freq == 0:
-            real_fake_attention = create_cam(real=data.cpu(),fake=decoder_out.detach().cpu(),cam=cam.detach().cpu(),epoch=epoch,idx=idx)
-            if label ==1:
-                save_image(real_fake_attention, os.path.join(args.sample_dir,args.folder_name,
+            # real_fake_attention = create_cam(real=data.cpu(),fake=decoder_out.detach().cpu(),cam=cam.detach().cpu(),epoch=epoch,idx=idx)
+
+            if data[label==1].shape[0] !=0:
+                real_fake_N = torch.cat((data[label==1],decoder_out_N),dim=0)
+                save_image(real_fake_N, os.path.join(args.sample_dir,args.folder_name,
                                                 '{0:04d}_{1:03d}_normal.png'.format(epoch, idx)),normalize=True)
-            else:
-                save_image(real_fake_attention, os.path.join(args.sample_dir, args.folder_name,
+            if data[label==0].shape[0] !=0:
+                real_fake_AN = torch.cat((data[label == 0], decoder_out_AN), dim=0)
+                save_image(real_fake_AN, os.path.join(args.sample_dir, args.folder_name,
                                                    '{0:04d}_{1:03d}_anomaly.png'.format(epoch, idx)), normalize=True)
         for n in loss_name:
             try:

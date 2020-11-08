@@ -14,21 +14,21 @@ parser.add_argument('--resume', type=bool, default=False, help='load model')
 parser.add_argument('--dataroot', type=str, default='D:\PycharmProjects\defect_for_ad/', help='dataset_name')
 parser.add_argument('--epoch', type=int, default=200, help='The number of epochs to run')
 parser.add_argument('--start_epoch', type=int, default=0, help='start epoch')
-parser.add_argument('--batch_size', type=int, default=1, help='The size of batch size')
-parser.add_argument('--print_freq', type=int, default=1000, help='The number of image_print_freq') #### 1000
+parser.add_argument('--batch_size', type=int, default=64, help='The size of batch size')
+parser.add_argument('--print_freq', type=int, default=20, help='The number of image_print_freq') #### 1000
 parser.add_argument('--save_freq', type=int, default=10, help='The number of ckpt_save_freq') #### 1000
 #parser.add_argument('--decay_flag', type=str2bool, default=True, help='The decay_flag')
 parser.add_argument('--decay_epoch', type=int, default=50, help='decay epoch') ###### 10
 
 parser.add_argument('--lr', type=float, default=0.0001, help='The learning rate')
-parser.add_argument('--L1_loss', type=float, default=1.5, help='Weight about L1_weight')
-parser.add_argument('--ABC_loss', type=float, default=0.5, help='Weight about ABC loss')
-parser.add_argument('--N_adv_loss_G', type=float, default=0.5, help='Weight about normal adversarial loss for G')
+parser.add_argument('--L1_loss', type=float, default=1.0, help='Weight about L1_weight')
+parser.add_argument('--ABC_loss', type=float, default=1.0, help='Weight about ABC loss')
+parser.add_argument('--N_adv_loss_G', type=float, default=1.0, help='Weight about normal adversarial loss for G')
 parser.add_argument('--N_adv_loss_D', type=float, default=1.0, help='Weight about normal adverarial loss for D')
-parser.add_argument('--patch_loss', type=float, default=1.5, help='Weight about patch loss')
-parser.add_argument('--Latent_loss', type=float, default=0.5, help='Weight about Latent loss')
-parser.add_argument('--AN_adv_loss_G', type=float, default=1.0, help='Weight about anomaly adversarial loss for G')
-parser.add_argument('--AN_adv_loss_D', type=float, default=0.5, help='Weight about anomaly adversarial loss for D')
+parser.add_argument('--Latent_loss', type=float, default=1.0, help='Weight about Latent loss')
+# parser.add_argument('--patch_loss', type=float, default=1.5, help='Weight about patch loss')
+# parser.add_argument('--AN_adv_loss_G', type=float, default=1.0, help='Weight about anomaly adversarial loss for G')
+# parser.add_argument('--AN_adv_loss_D', type=float, default=0.5, help='Weight about anomaly adversarial loss for D')
 
 parser.add_argument('--ch_d', type=int, default=64, help='base channel number per layer') # discriminator channel
 parser.add_argument('--ch_g', type=int, default=64, help='base channel number per layer') # generator channel
@@ -54,12 +54,12 @@ parser.add_argument('--train_attention_dir', type=str, default='train_attention'
 parser.add_argument('--test_attention_dir', type=str, default='test_attention',
                     help='Directory name to save the test_attention on test')
 
-parser.add_argument('--folder_name', type=str, default='k_means_layer_4_4',
+parser.add_argument('--folder_name', type=str, default='k_means_layer_4_5',
                     help='Directory name to save the samples on training')
 
 args = parser.parse_args()
 hyperparameter = dict_hyperparameter(args)
-wandb.init(config=hyperparameter,project=desc,name=0,id='4',resume=False)
+wandb.init(config=hyperparameter,project=desc,name=0,id='5',resume=False)
 
 
 def main():
@@ -67,8 +67,8 @@ def main():
     wandb.watch(models[0])
     wandb.watch(models[1])
     wandb.watch(models[2])
-    wandb.watch(models[3])
-    wandb.watch(models[4])
+    # wandb.watch(models[3])
+    # wandb.watch(models[4])
     if args.resume:
         load_model(args,models=models)
         optimizer, schedular = create_optimier(model=models, args=args)

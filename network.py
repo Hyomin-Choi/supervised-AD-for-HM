@@ -217,20 +217,20 @@ def create_model(args):
     netEncoder= encoder(args)
     netDecoder = decoder(args)
     net_N_Dis = N_discriminator(args)
-    net_AN_Dis = AN_discriminator(args)
-    classifier = Classifier(args)
+    # net_AN_Dis = AN_discriminator(args)
+    # classifier = Classifier(args)
 
 
     netEncoder = netEncoder.cuda()
     netDecoder = netDecoder.cuda()
     net_N_Dis = net_N_Dis.cuda()
-    net_AN_Dis = net_AN_Dis.cuda()
-    classifier = classifier.cuda()
+    # net_AN_Dis = net_AN_Dis.cuda()
+    # classifier = classifier.cuda()
 
     init_net(netEncoder)
     init_net(netDecoder)
     init_net(net_N_Dis)
-    init_net(net_AN_Dis)
-    init_net(classifier)
+    # init_net(net_AN_Dis)
+    # init_net(classifier)
 
-    return [netEncoder,netDecoder,net_N_Dis,net_AN_Dis,classifier]
+    return [netEncoder,netDecoder,net_N_Dis]#,net_AN_Dis,classifier]
