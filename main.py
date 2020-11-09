@@ -9,13 +9,13 @@ from attention import *
 import wandb
 desc = "project anomaly detection for grad_cam"
 parser = argparse.ArgumentParser(description=desc)
-parser.add_argument('--flag', type=tuple, default=(True,False,False), help='train, test, attention')
-parser.add_argument('--resume', type=bool, default=False, help='load model')
+parser.add_argument('--flag', type=tuple, default=(False,True,False), help='train, test, attention')
+parser.add_argument('--resume', type=bool, default=True, help='load model')
 parser.add_argument('--dataroot', type=str, default='D:\PycharmProjects\defect_for_ad/', help='dataset_name')
 parser.add_argument('--epoch', type=int, default=200, help='The number of epochs to run')
-parser.add_argument('--start_epoch', type=int, default=0, help='start epoch')
-parser.add_argument('--batch_size', type=int, default=64, help='The size of batch size')
-parser.add_argument('--print_freq', type=int, default=20, help='The number of image_print_freq') #### 1000
+parser.add_argument('--start_epoch', type=int, default=200, help='start epoch')
+parser.add_argument('--batch_size', type=int, default=1, help='The size of batch size')
+parser.add_argument('--print_freq', type=int, default=1500, help='The number of image_print_freq') #### 1000
 parser.add_argument('--save_freq', type=int, default=10, help='The number of ckpt_save_freq') #### 1000
 #parser.add_argument('--decay_flag', type=str2bool, default=True, help='The decay_flag')
 parser.add_argument('--decay_epoch', type=int, default=50, help='decay epoch') ###### 10
@@ -54,12 +54,12 @@ parser.add_argument('--train_attention_dir', type=str, default='train_attention'
 parser.add_argument('--test_attention_dir', type=str, default='test_attention',
                     help='Directory name to save the test_attention on test')
 
-parser.add_argument('--folder_name', type=str, default='k_means_layer_4_5',
+parser.add_argument('--folder_name', type=str, default='batchsize_1',
                     help='Directory name to save the samples on training')
 
 args = parser.parse_args()
 hyperparameter = dict_hyperparameter(args)
-wandb.init(config=hyperparameter,project=desc,name=0,id='5',resume=False)
+wandb.init(config=hyperparameter,project=desc,name=0,id='batchsize_1',resume=False)
 
 
 def main():
