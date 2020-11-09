@@ -9,11 +9,11 @@ from attention import *
 import wandb
 desc = "project anomaly detection for grad_cam"
 parser = argparse.ArgumentParser(description=desc)
-parser.add_argument('--flag', type=tuple, default=(False,True,False), help='train, test, attention')
-parser.add_argument('--resume', type=bool, default=True, help='load model')
-parser.add_argument('--dataroot', type=str, default='D:\PycharmProjects\defect_for_ad/', help='dataset_name')
+parser.add_argument('--flag', type=tuple, default=(True,False,True,False), help='train, test, valid, attention')
+parser.add_argument('--resume', type=bool, default=False, help='load model')
+parser.add_argument('--dataroot', type=str, default='E:\eccvw\GAN_based_Anomaly_Detection\Final_model\\548_500_defect\defect_data_2\\', help='dataset_name')
 parser.add_argument('--epoch', type=int, default=200, help='The number of epochs to run')
-parser.add_argument('--start_epoch', type=int, default=200, help='start epoch')
+parser.add_argument('--start_epoch', type=int, default=0, help='start epoch')
 parser.add_argument('--batch_size', type=int, default=1, help='The size of batch size')
 parser.add_argument('--print_freq', type=int, default=1500, help='The number of image_print_freq') #### 1000
 parser.add_argument('--save_freq', type=int, default=10, help='The number of ckpt_save_freq') #### 1000
@@ -75,10 +75,14 @@ def main():
     if args.flag[0]:
         #train
         train_dataloader = load_data(args, train_flag=True)
+        valid_dataloader = load_data(args,train_flag=False)
         optimizer,schedular = create_optimier(model=models,args=args)
         for epoch in range(args.start_epoch,args.epoch):
              print('\nEpoch: [%d | %d]' % (epoch + 1, args.epoch))
              train(args,models=models,dataloader=train_dataloader,epoch=epoch,optimizer=optimizer)
+             train(args,models=models,dataloader=train_dataloader,epoch=epoch,optimizer=optimizer,train=False)
+
+
              if epoch % args.save_freq ==0 or epoch == args.epoch-1:
                  for idx in range(len(models)):
                      save_checkpoint({

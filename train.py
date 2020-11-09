@@ -8,7 +8,7 @@ from tqdm import tqdm
 import cv2
 import numpy as np
 import gc
-def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None): #0:encoder, 1:decoder, 2:normal_D, 3:anomaly_D
+def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=True): #0:encoder, 1:decoder, 2:normal_D, 3:anomaly_D
 
     L1 = nn.L1Loss(reduction='mean').cuda()
     MSE = nn.MSELoss(reduction='mean').cuda()
