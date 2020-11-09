@@ -16,11 +16,19 @@ def create_folder(args):
     if not os.path.isdir(args.result_dir + '/' + args.folder_name):
         os.mkdir(args.result_dir+'/'+args.folder_name)
 
+    # valid_dir
+    if not os.path.isdir(args.valid_dir):
+        os.mkdir(args.valid_dir)
+    if not os.path.isdir(args.valid_dir + '/' + args.folder_name):
+        os.mkdir(args.valid_dir + '/' + args.folder_name)
+
+
     #sample_dir
     if not os.path.isdir(args.sample_dir):
         os.mkdir(args.sample_dir)
     if not os.path.isdir(args.sample_dir+'/'+args.folder_name):
         os.mkdir(args.sample_dir+'/'+args.folder_name)
+
 
     # log_dir
     if not os.path.isdir(args.log_dir):
@@ -28,17 +36,6 @@ def create_folder(args):
     if not os.path.isdir(args.log_dir + '/' + args.folder_name):
         os.mkdir(args.log_dir+'/'+args.folder_name)
 
-    # # train_attention_dir
-    # if not os.path.isdir(args.train_attention_dir):
-    #     os.mkdir(args.train_attention_dir)
-    # if not os.path.isdir(args.train_attention_dir + '/' + args.folder_name):
-    #     os.mkdir(args.train_attention_dir + '/' + args.folder_name)
-    #
-    # # test_attention_dir
-    # if not os.path.isdir(args.test_attention_dir):
-    #     os.mkdir(args.test_attention_dir)
-    # if not os.path.isdir(args.test_attention_dir + '/' + args.folder_name):
-    #     os.mkdir(args.test_attention_dir + '/' + args.folder_name)
 
 
 

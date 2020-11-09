@@ -14,7 +14,7 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=
     MSE = nn.MSELoss(reduction='mean').cuda()
     ce = torch.nn.BCELoss(reduction='mean').cuda()
 
-    loss_name = ['L1_loss', 'ABC_loss', 'N_adv_loss_G', 'N_adv_loss_D','Latent_loss',]
+    loss_name = ['train_L1_loss', 'train_ABC_loss', 'train_N_adv_loss_G', 'train_N_adv_loss_D','train_Latent_loss'] if train else ['valid_L1_loss', 'valid_ABC_loss', 'valid_N_adv_loss_G', 'valid_N_adv_loss_D','valid_Latent_loss']
                  #'AN_adv_loss_G', 'AN_adv_loss_D','classifier_loss','classifier_acc','attention_loss']
     loss_dict = {loss_name[0]:[],loss_name[1]:[],loss_name[2]:[],loss_name[3]:[],loss_name[4]:[]}#,loss_name[5]:[],loss_name[6]:[],loss_name[7]:[],loss_name[8]:[],loss_name[9]:[],loss_name[10]:[]}
     metrics = {}
@@ -40,46 +40,56 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=
             Normal_D_loss = ( ce(real_logit, Variable(torch.ones(real_logit.shape).cuda(), requires_grad=False)) + \
                                     ce(fake_logit, Variable(torch.zeros(fake_logit.shape).cuda(), requires_grad=False))
                             ) * 0.5
-            loss_dict['N_adv_loss_D'].append(Normal_D_loss.item())
-            Normal_D_loss = Normal_D_loss * args.N_adv_loss_D
-            models[2].zero_grad()
-            Normal_D_loss.backward(retain_graph=True)
-            optimizer[2].step()
 
-            #update Normal data
+            if train:
+                loss_dict['train_N_adv_loss_D'].append(Normal_D_loss.item())
+                Normal_D_loss = Normal_D_loss * args.N_adv_loss_D
+                models[2].zero_grad()
+                Normal_D_loss.backward(retain_graph=True)
+                optimizer[2].step()
+            else:
+                loss_dict['valid_N_adv_loss_D'].append(Normal_D_loss.item())
+
+            #update Normal data Generator
             difference = L1(data[label==1], decoder_out_N)
             recon_latent = models[0](decoder_out_N)[3]
             latent_difference = L1(encoder_out_N[3], recon_latent)
             fake_logit = models[2](decoder_out_N)
             Normal_G_loss = ce(fake_logit, Variable(torch.ones(fake_logit.shape).cuda(), requires_grad=False))
 
-            loss_dict['L1_loss'].append(difference.item())
-            loss_dict['Latent_loss'].append(latent_difference.item())
-            loss_dict['N_adv_loss_G'].append(Normal_G_loss.item())
-            N_total_loss = difference * args.L1_loss + latent_difference * args.Latent_loss +  Normal_G_loss * args.N_adv_loss_G
+            if train:
+                loss_dict['train_L1_loss'].append(difference.item())
+                loss_dict['train_Latent_loss'].append(latent_difference.item())
+                loss_dict['train_N_adv_loss_G'].append(Normal_G_loss.item())
+                N_total_loss = difference * args.L1_loss + latent_difference * args.Latent_loss + Normal_G_loss * args.N_adv_loss_G
+                models[0].zero_grad()
+                models[1].zero_grad()
+                N_total_loss.backward()
+                optimizer[0].step()
+                optimizer[1].step()
+            else:
+                loss_dict['valid_L1_loss'].append(difference.item())
+                loss_dict['valid_Latent_loss'].append(latent_difference.item())
+                loss_dict['valid_N_adv_loss_G'].append(Normal_G_loss.item())
 
-            models[0].zero_grad()
-            models[1].zero_grad()
-            N_total_loss.backward()
-            optimizer[0].step()
-            optimizer[1].step()
-        else:
-            N_total_loss = 0
+
         if anomaly_number !=0:
             #update Anomaly data
             encoder_out_AN = models[0](data[label == 0])  # out6= 512,4,4
             decoder_out_AN = models[1](*encoder_out_AN)
             difference = L1(data[label==0], decoder_out_AN)
             difference = -torch.log(1 - torch.exp(-1 * difference))
-            loss_dict['ABC_loss'].append(difference.item())
-            AN_total_loss = difference * args.ABC_loss
-            models[0].zero_grad()
-            models[1].zero_grad()
-            AN_total_loss.backward()
-            optimizer[0].step()
-            optimizer[1].step()
-        else:
-            AN_total_loss = 0
+            if train:
+                loss_dict['train_ABC_loss'].append(difference.item())
+                AN_total_loss = difference * args.ABC_loss
+                models[0].zero_grad()
+                models[1].zero_grad()
+                AN_total_loss.backward()
+                optimizer[0].step()
+                optimizer[1].step()
+            else:
+                loss_dict['valid_ABC_loss'].append(difference.item())
+
         # total_loss = N_total_loss + AN_total_loss
         # models[0].zero_grad()
         # models[1].zero_grad()
@@ -177,17 +187,31 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=
         #     classifier_loss.backward()
         # optimizer[4].step()
         '''
-        if idx % args.print_freq == 0:
-            # real_fake_attention = create_cam(real=data.cpu(),fake=decoder_out.detach().cpu(),cam=cam.detach().cpu(),epoch=epoch,idx=idx)
+        if train:
+            if idx % args.train_print_freq == 0:
+                # real_fake_attention = create_cam(real=data.cpu(),fake=decoder_out.detach().cpu(),cam=cam.detach().cpu(),epoch=epoch,idx=idx)
 
-            if normal_number !=0:
-                real_fake_N = torch.cat((data[label==1],decoder_out_N),dim=0)
-                save_image(real_fake_N, os.path.join(args.sample_dir,args.folder_name,
-                                                '{0:04d}_{1:03d}_normal.png'.format(epoch, idx)),normalize=True)
-            if anomaly_number !=0:
-                real_fake_AN = torch.cat((data[label == 0], decoder_out_AN), dim=0)
-                save_image(real_fake_AN, os.path.join(args.sample_dir, args.folder_name,
-                                                   '{0:04d}_{1:03d}_anomaly.png'.format(epoch, idx)), normalize=True)
+                if normal_number !=0:
+                    real_fake_N = torch.cat((data[label==1],decoder_out_N),dim=0)
+                    save_image(real_fake_N, os.path.join(args.sample_dir,args.folder_name,
+                                                    '{0:04d}_{1:03d}_normal.png'.format(epoch, idx)),normalize=True)
+                if anomaly_number !=0:
+                    real_fake_AN = torch.cat((data[label == 0], decoder_out_AN), dim=0)
+                    save_image(real_fake_AN, os.path.join(args.sample_dir, args.folder_name,
+                                                       '{0:04d}_{1:03d}_anomaly.png'.format(epoch, idx)), normalize=True)
+        else:
+            if idx % args.valid_print_freq == 0:
+                # real_fake_attention = create_cam(real=data.cpu(),fake=decoder_out.detach().cpu(),cam=cam.detach().cpu(),epoch=epoch,idx=idx)
+
+                if normal_number != 0:
+                    real_fake_N = torch.cat((data[label == 1], decoder_out_N), dim=0)
+                    save_image(real_fake_N, os.path.join(args.valid_dir, args.folder_name,
+                                                         '{0:04d}_{1:03d}_normal.png'.format(epoch, idx)), normalize=True)
+                if anomaly_number != 0:
+                    real_fake_AN = torch.cat((data[label == 0], decoder_out_AN), dim=0)
+                    save_image(real_fake_AN, os.path.join(args.valid_dir, args.folder_name,
+                                                          '{0:04d}_{1:03d}_anomaly.png'.format(epoch, idx)), normalize=True)
+
         for n in loss_name:
             try:
                 tmp = sum(loss_dict[n]) / len(loss_dict[n])

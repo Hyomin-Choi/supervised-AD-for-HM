@@ -9,13 +9,14 @@ from attention import *
 import wandb
 desc = "project anomaly detection for grad_cam"
 parser = argparse.ArgumentParser(description=desc)
-parser.add_argument('--flag', type=tuple, default=(True,False,True,False), help='train, test, valid, attention')
+parser.add_argument('--flag', type=tuple, default=(True,False), help='train and test')
 parser.add_argument('--resume', type=bool, default=False, help='load model')
 parser.add_argument('--dataroot', type=str, default='E:\eccvw\GAN_based_Anomaly_Detection\Final_model\\548_500_defect\defect_data_2\\', help='dataset_name')
 parser.add_argument('--epoch', type=int, default=200, help='The number of epochs to run')
 parser.add_argument('--start_epoch', type=int, default=0, help='start epoch')
 parser.add_argument('--batch_size', type=int, default=1, help='The size of batch size')
-parser.add_argument('--print_freq', type=int, default=1500, help='The number of image_print_freq') #### 1000
+parser.add_argument('--train_print_freq', type=int, default=5000, help='The number of image_print_freq') #### 1000
+parser.add_argument('--valid_print_freq', type=int, default=1200, help='The number of image_print_freq') #### 1000
 parser.add_argument('--save_freq', type=int, default=10, help='The number of ckpt_save_freq') #### 1000
 #parser.add_argument('--decay_flag', type=str2bool, default=True, help='The decay_flag')
 parser.add_argument('--decay_epoch', type=int, default=50, help='decay epoch') ###### 10
@@ -49,17 +50,14 @@ parser.add_argument('--log_dir', type=str, default='logs',
                     help='Directory name to save training logs')
 parser.add_argument('--sample_dir', type=str, default='samples',
                     help='Directory name to save the samples on training')
-parser.add_argument('--train_attention_dir', type=str, default='train_attention',
-                    help='Directory name to save the train_attention on training')
-parser.add_argument('--test_attention_dir', type=str, default='test_attention',
-                    help='Directory name to save the test_attention on test')
-
-parser.add_argument('--folder_name', type=str, default='batchsize_1',
+parser.add_argument('--valid_dir', type=str, default='valid',
+                    help='Directory name to save the samples on validation')
+parser.add_argument('--folder_name', type=str, default='all_data',
                     help='Directory name to save the samples on training')
 
 args = parser.parse_args()
 hyperparameter = dict_hyperparameter(args)
-wandb.init(config=hyperparameter,project=desc,name=0,id='batchsize_1',resume=False)
+wandb.init(config=hyperparameter,project=desc,name=0,id='all_data',resume=args.resume)
 
 
 def main():
@@ -75,14 +73,12 @@ def main():
     if args.flag[0]:
         #train
         train_dataloader = load_data(args, train_flag=True)
-        valid_dataloader = load_data(args,train_flag=False)
+        valid_dataloader = load_data(args,valid_flag=True)
         optimizer,schedular = create_optimier(model=models,args=args)
         for epoch in range(args.start_epoch,args.epoch):
              print('\nEpoch: [%d | %d]' % (epoch + 1, args.epoch))
              train(args,models=models,dataloader=train_dataloader,epoch=epoch,optimizer=optimizer)
-             train(args,models=models,dataloader=train_dataloader,epoch=epoch,optimizer=optimizer,train=False)
-
-
+             train(args,models=models,dataloader=valid_dataloader,epoch=epoch,optimizer=optimizer,train=False)
              if epoch % args.save_freq ==0 or epoch == args.epoch-1:
                  for idx in range(len(models)):
                      save_checkpoint({
@@ -92,12 +88,9 @@ def main():
                          filename='{0}_model_{1:04d}.pth.tar'.format(models[idx].__class__.__name__,epoch+1))
 
     if args.flag[1]:
-        test_dataloader = load_data(args,train_flag=False)
+        test_dataloader = load_data(args,test_flag=True)
         test(args,netEncoder=models[0],netDecoder=models[1],netDiscriminator=None,dataloader=test_dataloader)
 
-    if args.flag[2]:
-        train_dataloader = load_data(args, train_flag=True)
-        attention(models=models,args=args,dataloader=train_dataloader,train=True)
     wandb.save(os.path.join(wandb.run.dir, "checkpoint*"))
 if __name__ == '__main__':
     create_folder(args)
