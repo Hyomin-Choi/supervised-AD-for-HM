@@ -226,7 +226,7 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=
             metrics[n] = avg
         except:
             pass
-    wandb.log(metrics)
+    return metrics
 
 def compute_patch(real=None,fake=None,args=None):
     N_error = []

@@ -8,6 +8,7 @@
       <excludeFolder url="file://$MODULE_DIR$/samples" />
       <excludeFolder url="file://$MODULE_DIR$/test_attention" />
       <excludeFolder url="file://$MODULE_DIR$/train_attention" />
+      <excludeFolder url="file://$MODULE_DIR$/valid" />
       <excludeFolder url="file://$MODULE_DIR$/wandb" />
     </content>
     <orderEntry type="inheritedJdk" />
