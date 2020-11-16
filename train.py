@@ -78,7 +78,7 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=
             encoder_out_AN = models[0](data[label == 0])  # out6= 512,4,4
             decoder_out_AN = models[1](*encoder_out_AN)
             difference = L1(data[label==0], decoder_out_AN)
-            difference = -torch.log(1 - torch.exp(-1 * difference))
+            difference = -torch.log(1 - torch.exp(-1 * difference)) #0.13밑으로는 내려가지 않음(difference가 0~2라)
             if train:
                 loss_dict['train_ABC_loss'].append(difference.item())
                 AN_total_loss = difference * args.ABC_loss
