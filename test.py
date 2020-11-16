@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 def test(args=None,netEncoder=None,netDecoder=None,netDiscriminator=None,dataloader=None):
     with torch.no_grad():
         total_L1_loss = []
-        L1 = nn.L1Loss(size_average=True).cuda()
+        L1 = nn.L1Loss(reduction='mean').cuda()
         difference_list = []
         N_difference_list = []
         AN_difference_list = []
@@ -56,9 +56,10 @@ def test(args=None,netEncoder=None,netDecoder=None,netDiscriminator=None,dataloa
 
         plt.savefig(os.path.join(args.result_dir, args.folder_name) + '/{}_ROC_curve.png'.format(args.start_epoch))
         plt.show()
+        # plt.xlim(0,2)
         sns.set_style("darkgrid")
-        sns.distplot(AN_difference_list, label='Abnormal Scores', rug=False,hist=False)
-        sns.distplot(N_difference_list, label='Normal Scores',  rug=False,hist=False)
+        sns.distplot(AN_difference_list,label='Abnormal Scores', rug=False,hist=False,kde_kws={'clip':(0.0,2.0)})
+        sns.distplot(N_difference_list, label='Normal Scores',  rug=False,hist=False,kde_kws={'clip':(0.0,2.0)})
         # sns.kdeplot(AN_difference_list,label = 'Abnormal Scores',shade=True)#,shade=True)
         # sns.kdeplot(N_difference_list, label='Normal Scores', shade=True)
         plt.legend()

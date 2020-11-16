@@ -14,9 +14,9 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=
     MSE = nn.MSELoss(reduction='mean').cuda()
     ce = torch.nn.BCELoss(reduction='mean').cuda()
 
-    loss_name = ['train_L1_loss', 'train_ABC_loss', 'train_N_adv_loss_G', 'train_N_adv_loss_D','train_Latent_loss'] if train else ['valid_L1_loss', 'valid_ABC_loss', 'valid_N_adv_loss_G', 'valid_N_adv_loss_D','valid_Latent_loss']
+    loss_name = ['train_L1_loss', 'train_ABC_loss'] if train else ['valid_L1_loss', 'valid_ABC_loss']
                  #'AN_adv_loss_G', 'AN_adv_loss_D','classifier_loss','classifier_acc','attention_loss']
-    loss_dict = {loss_name[0]:[],loss_name[1]:[],loss_name[2]:[],loss_name[3]:[],loss_name[4]:[]}#,loss_name[5]:[],loss_name[6]:[],loss_name[7]:[],loss_name[8]:[],loss_name[9]:[],loss_name[10]:[]}
+    loss_dict = {loss_name[0]:[],loss_name[1]:[]}#,loss_name[5]:[],loss_name[6]:[],loss_name[7]:[],loss_name[8]:[],loss_name[9]:[],loss_name[10]:[]}
     metrics = {}
 
     # feature_blobs = [] # (1,1024,8,8)
@@ -35,33 +35,14 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=
             #update Discriminator
             encoder_out_N = models[0](data[label == 1])  # out6= 512,4,4
             decoder_out_N = models[1](*encoder_out_N)
-            real_logit = models[2](data[label==1])
-            fake_logit = models[2](decoder_out_N)
-            Normal_D_loss = ( ce(real_logit, Variable(torch.ones(real_logit.shape).cuda(), requires_grad=False)) + \
-                                    ce(fake_logit, Variable(torch.zeros(fake_logit.shape).cuda(), requires_grad=False))
-                            ) * 0.5
-
-            if train:
-                loss_dict['train_N_adv_loss_D'].append(Normal_D_loss.item())
-                Normal_D_loss = Normal_D_loss * args.N_adv_loss_D
-                models[2].zero_grad()
-                Normal_D_loss.backward(retain_graph=True)
-                optimizer[2].step()
-            else:
-                loss_dict['valid_N_adv_loss_D'].append(Normal_D_loss.item())
 
             #update Normal data Generator
             difference = L1(data[label==1], decoder_out_N)
-            recon_latent = models[0](decoder_out_N)[3]
-            latent_difference = L1(encoder_out_N[3], recon_latent)
-            fake_logit = models[2](decoder_out_N)
-            Normal_G_loss = ce(fake_logit, Variable(torch.ones(fake_logit.shape).cuda(), requires_grad=False))
 
             if train:
                 loss_dict['train_L1_loss'].append(difference.item())
-                loss_dict['train_Latent_loss'].append(latent_difference.item())
-                loss_dict['train_N_adv_loss_G'].append(Normal_G_loss.item())
-                N_total_loss = difference * args.L1_loss + latent_difference * args.Latent_loss + Normal_G_loss * args.N_adv_loss_G
+
+                N_total_loss = difference * args.L1_loss
                 models[0].zero_grad()
                 models[1].zero_grad()
                 N_total_loss.backward()
@@ -69,8 +50,6 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=
                 optimizer[1].step()
             else:
                 loss_dict['valid_L1_loss'].append(difference.item())
-                loss_dict['valid_Latent_loss'].append(latent_difference.item())
-                loss_dict['valid_N_adv_loss_G'].append(Normal_G_loss.item())
 
 
         if anomaly_number !=0:

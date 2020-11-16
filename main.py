@@ -52,7 +52,7 @@ parser.add_argument('--sample_dir', type=str, default='samples',
                     help='Directory name to save the samples on training')
 parser.add_argument('--valid_dir', type=str, default='valid',
                     help='Directory name to save the samples on validation')
-parser.add_argument('--folder_name', type=str, default='1 percent',
+parser.add_argument('--folder_name', type=str, default='all data_ABC',
                     help='Directory name to save the samples on training')
 
 args = parser.parse_args()
@@ -64,17 +64,16 @@ def main():
     models = create_model(args)
     wandb.watch(models[0])
     wandb.watch(models[1])
-    wandb.watch(models[2])
+    # wandb.watch(models[2])
     # wandb.watch(models[3])
     # wandb.watch(models[4])
     if args.resume:
         load_model(args,models=models)
-        optimizer, schedular = create_optimier(model=models, args=args)
+    optimizer, schedular = create_optimier(model=models, args=args)
     if args.flag[0]:
         #train
         train_dataloader = load_data(args, train_flag=True)
         valid_dataloader = load_data(args,valid_flag=True)
-        optimizer,schedular = create_optimier(model=models,args=args)
         for epoch in range(args.start_epoch,args.epoch):
              print('\nEpoch: [%d | %d]' % (epoch + 1, args.epoch))
              train_metrics= train(args,models=models,dataloader=train_dataloader,epoch=epoch,optimizer=optimizer)
