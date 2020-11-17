@@ -22,7 +22,7 @@ parser.add_argument('--save_freq', type=int, default=10, help='The number of ckp
 parser.add_argument('--decay_epoch', type=int, default=50, help='decay epoch') ###### 10
 
 parser.add_argument('--lr', type=float, default=0.0001, help='The learning rate')
-parser.add_argument('--L1_loss', type=float, default=1.0, help='Weight about L1_weight')
+parser.add_argument('--L1_loss', type=float, default=10.0, help='Weight about L1_weight')
 parser.add_argument('--ABC_loss', type=float, default=3.0, help='Weight about ABC loss')
 parser.add_argument('--N_adv_loss_G', type=float, default=1.0, help='Weight about normal adversarial loss for G')
 parser.add_argument('--N_adv_loss_D', type=float, default=1.0, help='Weight about normal adverarial loss for D')
@@ -52,7 +52,7 @@ parser.add_argument('--sample_dir', type=str, default='samples',
                     help='Directory name to save the samples on training')
 parser.add_argument('--valid_dir', type=str, default='valid',
                     help='Directory name to save the samples on validation')
-parser.add_argument('--folder_name', type=str, default='1 percent',
+parser.add_argument('--folder_name', type=str, default='all_data_2',
                     help='Directory name to save the samples on training')
 
 args = parser.parse_args()
