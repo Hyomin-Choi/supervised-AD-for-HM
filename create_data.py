@@ -60,7 +60,7 @@ def load_data(args,train_flag = False,valid_flag=False,test_flag=False):
         test_data = ImageFolder(root=args.dataroot + 'test', transform=transforms.Compose(test_list))
         dataloader = DataLoader(
             test_data,
-            batch_size=args.batch_size, shuffle=False, num_workers=0,drop_last=False)
+            batch_size=1, shuffle=False, num_workers=0,drop_last=False)
     return dataloader
 
 '''

@@ -109,6 +109,7 @@ class down(nn.Module):
         conv.append(nn.Conv2d(in_channels=in_c,out_channels=out_c,kernel_size=k_size,stride=s_size,padding=p_size,bias=False))
         if BN:
             conv.append(nn.BatchNorm2d(out_c))
+        # conv.append(nn.Tanh())
         conv.append(nn.LeakyReLU(0.2,True))
         self.conv = nn.Sequential(*conv)
 

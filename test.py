@@ -9,10 +9,11 @@ from sklearn.metrics import auc
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def test(args=None,netEncoder=None,netDecoder=None,netDiscriminator=None,dataloader=None):
+def test(args=None,models=None,dataloader=None):
     with torch.no_grad():
         total_L1_loss = []
         L1 = nn.L1Loss(reduction='mean').cuda()
+        MSE = nn.MSELoss(reduction='mean').cuda()
         difference_list = []
         N_difference_list = []
         AN_difference_list = []
@@ -24,9 +25,10 @@ def test(args=None,netEncoder=None,netDecoder=None,netDiscriminator=None,dataloa
             if use_cuda:
                 data = datas[0].cuda()
                 label = datas[1].cuda()
-            encoder_out = netEncoder(data)  # out4= 512,16,16
-            decoder_out = netDecoder(*encoder_out)
-            difference = L1(data, decoder_out)
+            CAE_out = models[0](data)
+            # encoder_out = netEncoder(data)  # out4= 512,16,16
+            # decoder_out = netDecoder(*encoder_out)
+            difference = L1(data, CAE_out)
 
             difference_list.append(difference.item())
             if label ==0:
@@ -35,7 +37,7 @@ def test(args=None,netEncoder=None,netDecoder=None,netDiscriminator=None,dataloa
             else:
                 label_list.append(0)
                 N_difference_list.append(difference)
-            real_fake = torch.cat([data, decoder_out], dim=0)
+            real_fake = torch.cat([data, CAE_out], dim=0)
             if label == 1:
                 save_image(real_fake, os.path.join(args.result_dir, args.folder_name,
                                                    '{0:04d}_{1:03d}_normal.png'.format(args.start_epoch, idx)), normalize=True)
@@ -58,8 +60,8 @@ def test(args=None,netEncoder=None,netDecoder=None,netDiscriminator=None,dataloa
         plt.show()
         # plt.xlim(0,2)
         sns.set_style("darkgrid")
-        sns.distplot(AN_difference_list,label='Abnormal Scores', rug=False,hist=False,kde_kws={'clip':(0.0,2.0)})
-        sns.distplot(N_difference_list, label='Normal Scores',  rug=False,hist=False,kde_kws={'clip':(0.0,2.0)})
+        sns.distplot(AN_difference_list,label='Abnormal Scores', rug=False,hist=False)
+        sns.distplot(N_difference_list, label='Normal Scores',  rug=False,hist=False)
         # sns.kdeplot(AN_difference_list,label = 'Abnormal Scores',shade=True)#,shade=True)
         # sns.kdeplot(N_difference_list, label='Normal Scores', shade=True)
         plt.legend()

@@ -9,11 +9,11 @@ from attention import *
 import wandb
 desc = "project anomaly detection for grad_cam"
 parser = argparse.ArgumentParser(description=desc)
-parser.add_argument('--flag', type=tuple, default=(True,False), help='train and test')
-parser.add_argument('--resume', type=bool, default=False, help='load model')
+parser.add_argument('--flag', type=tuple, default=(False,True), help='train and test')
+parser.add_argument('--resume', type=bool, default=True, help='load model')
 parser.add_argument('--dataroot', type=str, default='E:\eccvw\GAN_based_Anomaly_Detection\Final_model\\548_500_defect\defect_data_2\\', help='dataset_name')
 parser.add_argument('--epoch', type=int, default=500, help='The number of epochs to run')
-parser.add_argument('--start_epoch', type=int, default=0, help='start epoch')
+parser.add_argument('--start_epoch', type=int, default=261, help='start epoch')
 parser.add_argument('--batch_size', type=int, default=100, help='The size of batch size')
 parser.add_argument('--train_print_freq', type=int, default=100, help='The number of image_print_freq') #### 1000
 parser.add_argument('--valid_print_freq', type=int, default=30, help='The number of image_print_freq') #### 1000
@@ -31,8 +31,8 @@ parser.add_argument('--ABC_loss', type=float, default=1.0, help='Weight about AB
 # parser.add_argument('--AN_adv_loss_G', type=float, default=1.0, help='Weight about anomaly adversarial loss for G')
 # parser.add_argument('--AN_adv_loss_D', type=float, default=0.5, help='Weight about anomaly adversarial loss for D')
 
-parser.add_argument('--ch_d', type=int, default=16, help='base channel number per layer') # discriminator channel
-parser.add_argument('--ch_g', type=int, default=16, help='base channel number per layer') # generator channel
+parser.add_argument('--ch_d', type=int, default=8, help='base channel number per layer') # discriminator channel
+parser.add_argument('--ch_g', type=int, default=8, help='base channel number per layer') # generator channel
 
 parser.add_argument('--img_size', type=tuple, default=(128,128), help='The size of image')
 parser.add_argument('--img_ch', type=int, default=3, help='The size of image channel')
@@ -92,7 +92,7 @@ def main():
 
     if args.flag[1]:
         test_dataloader = load_data(args,test_flag=True)
-        test(args,netEncoder=models[0],netDecoder=models[1],netDiscriminator=None,dataloader=test_dataloader)
+        test(args,models=models,dataloader=test_dataloader)
 
     wandb.save(os.path.join(wandb.run.dir, "checkpoint*"))
 if __name__ == '__main__':
