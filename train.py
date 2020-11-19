@@ -11,7 +11,7 @@ import gc
 def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=True): #0:encoder, 1:decoder, 2:normal_D, 3:anomaly_D
 
     L1 = nn.L1Loss(reduction='mean').cuda()
-    MSE = nn.MSELoss(reduction='mean').cuda()
+    MSE = nn.MSELoss(reduction='none').cuda()
     ce = torch.nn.BCELoss(reduction='mean').cuda()
 
     loss_name = ['train_L1_loss', 'train_ABC_loss'] if train else ['valid_L1_loss', 'valid_ABC_loss']
@@ -28,53 +28,37 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=
         use_cuda = torch.cuda.is_available()
         data = datas[0].cuda() if use_cuda else datas[0]
         label = datas[1].cuda() if use_cuda else datas[1]
+
         normal_number = data[label==1].shape[0]
         anomaly_number = data[label==0].shape[0]
+        if train:
+            noise = torch.normal(mean=0, std=0.2, size=data.size()).cuda()
+            CAE_out = models[0](data+noise)
+        else:
+            CAE_out = models[0](data)
 
-        if normal_number !=0:
-            #update Discriminator
-            encoder_out_N = models[0](data[label == 1])  # out6= 512,4,4
-            decoder_out_N = models[1](*encoder_out_N)
+        difference = MSE(data[:],CAE_out[:])
+        difference = torch.mean(difference,dim=(1,2,3))
 
-            #update Normal data Generator
-            difference = L1(data[label==1], decoder_out_N)
+        N_loss = label*difference
+        AN_loss = -(1-label)*torch.log(1 - torch.exp(-1 * difference))
+        N_loss = torch.sum(N_loss,dim=0)/normal_number if normal_number !=0 else torch.tensor(0,dtype=torch.float32).cuda()
+        AN_loss = torch.sum(AN_loss,dim=0)/anomaly_number if anomaly_number !=0 else torch.tensor(0,dtype=torch.float32).cuda()
 
-            if train:
-                loss_dict['train_L1_loss'].append(difference.item())
+        if train:
+            loss_dict['train_L1_loss'].append(N_loss.item()) if normal_number !=0 else ''
+            loss_dict['train_ABC_loss'].append(AN_loss.item()) if anomaly_number !=0 else ''
+        else:
+            loss_dict['valid_L1_loss'].append(N_loss.item()) if normal_number !=0 else ''
+            loss_dict['valid_ABC_loss'].append(AN_loss.item()) if anomaly_number !=0 else ''
 
-                N_total_loss = difference * args.L1_loss
-                models[0].zero_grad()
-                models[1].zero_grad()
-                N_total_loss.backward()
-                optimizer[0].step()
-                optimizer[1].step()
-            else:
-                loss_dict['valid_L1_loss'].append(difference.item())
+        if train:
+            total_loss = args.L1_loss * N_loss + args.ABC_loss * AN_loss
+            models[0].zero_grad()
+            total_loss.backward()
+            optimizer[0].step()
 
 
-        if anomaly_number !=0:
-            #update Anomaly data
-            encoder_out_AN = models[0](data[label == 0])  # out6= 512,4,4
-            decoder_out_AN = models[1](*encoder_out_AN)
-            difference = L1(data[label==0], decoder_out_AN)
-            difference = -torch.log(1 - torch.exp(-1 * difference)) #0.13밑으로는 내려가지 않음(difference가 0~2라)
-            if train:
-                loss_dict['train_ABC_loss'].append(difference.item())
-                AN_total_loss = difference * args.ABC_loss
-                models[0].zero_grad()
-                models[1].zero_grad()
-                AN_total_loss.backward()
-                optimizer[0].step()
-                optimizer[1].step()
-            else:
-                loss_dict['valid_ABC_loss'].append(difference.item())
-
-        # total_loss = N_total_loss + AN_total_loss
-        # models[0].zero_grad()
-        # models[1].zero_grad()
-        # total_loss.backward()
-        # optimizer[0].step()
-        # optimizer[1].step()
         '''
         #update Discriminator
         if label == 1: #normal
@@ -166,30 +150,34 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=
         #     classifier_loss.backward()
         # optimizer[4].step()
         '''
+
+        real_fake_all = [torch.cat((data[i, :].unsqueeze(0), CAE_out[i, :].unsqueeze(0),), dim=0) for i in range(args.batch_size)]
+        real_fake_N = [real_fake_all[i] for i in range(len(label)) if label[i]==1]
+
+        real_fake_AN = [real_fake_all[i] for i in range(len(label)) if label[i]==0]
+
         if train:
             if idx % args.train_print_freq == 0:
                 # real_fake_attention = create_cam(real=data.cpu(),fake=decoder_out.detach().cpu(),cam=cam.detach().cpu(),epoch=epoch,idx=idx)
-
                 if normal_number !=0:
-                    real_fake_N = torch.cat((data[label==1],decoder_out_N),dim=0)
+                    real_fake_N = torch.cat(real_fake_N[:], dim=0)
                     save_image(real_fake_N, os.path.join(args.sample_dir,args.folder_name,
-                                                    '{0:04d}_{1:03d}_normal.png'.format(epoch, idx)),normalize=True)
+                                                    '{0:04d}_{1:03d}_normal.png'.format(epoch, idx)),nrow=2,normalize=True)
                 if anomaly_number !=0:
-                    real_fake_AN = torch.cat((data[label == 0], decoder_out_AN), dim=0)
+                    real_fake_AN = torch.cat(real_fake_AN[:], dim=0)
                     save_image(real_fake_AN, os.path.join(args.sample_dir, args.folder_name,
-                                                       '{0:04d}_{1:03d}_anomaly.png'.format(epoch, idx)), normalize=True)
+                                                       '{0:04d}_{1:03d}_anomaly.png'.format(epoch, idx)),nrow=2, normalize=True)
         else:
             if idx % args.valid_print_freq == 0:
                 # real_fake_attention = create_cam(real=data.cpu(),fake=decoder_out.detach().cpu(),cam=cam.detach().cpu(),epoch=epoch,idx=idx)
-
                 if normal_number != 0:
-                    real_fake_N = torch.cat((data[label == 1], decoder_out_N), dim=0)
+                    real_fake_N = torch.cat(real_fake_N[:], dim=0)
                     save_image(real_fake_N, os.path.join(args.valid_dir, args.folder_name,
-                                                         '{0:04d}_{1:03d}_normal.png'.format(epoch, idx)), normalize=True)
+                                                         '{0:04d}_{1:03d}_normal.png'.format(epoch, idx)),nrow=2, normalize=True)
                 if anomaly_number != 0:
-                    real_fake_AN = torch.cat((data[label == 0], decoder_out_AN), dim=0)
+                    real_fake_AN = torch.cat(real_fake_AN[:], dim=0)
                     save_image(real_fake_AN, os.path.join(args.valid_dir, args.folder_name,
-                                                          '{0:04d}_{1:03d}_anomaly.png'.format(epoch, idx)), normalize=True)
+                                                          '{0:04d}_{1:03d}_anomaly.png'.format(epoch, idx)), nrow=2,normalize=True)
 
         for n in loss_name:
             try:

@@ -213,24 +213,44 @@ class Classifier(nn.Module):
         x = F.pad(x,(0,1,0,1))
         return x
 
+class conventional_AE(nn.Module):
+    def __init__(self,args):
+        super(conventional_AE,self).__init__()
+        self.down1 = down(args.img_ch, args.ch_g, args.k_size, 2, 1, bias=False, BN=False)
+        self.down2 = down(args.ch_g, args.ch_g * 2, args.k_size, 2, 1, bias=False, BN=True)
+        self.down3 = down(args.ch_g * 2, args.ch_g * 4, args.k_size, 2, 1, bias=False, BN=True)
+        self.down4 = down(args.ch_g * 4, args.ch_g * 8, args.k_size, 2, 1, bias=False, BN=True)
+        self.up1 = up(args.ch_g * 8, args.ch_g * 4, args.k_size, 2, 1, bias=False, BN=True)
+        self.up2 = up(args.ch_g * 4, args.ch_g * 2, args.k_size, 2, 1, bias=False, BN=True)
+        self.up3 = up(args.ch_g * 2, args.ch_g, args.k_size, 2, 1, bias=False, BN=True)
+        self.up4 = up(args.ch_g , args.img_ch, args.k_size, 2, 1, bias=False, BN=False, last=True)
+        self.model = nn.Sequential(self.down1,self.down2,self.down3,self.down4,self.up1,self.up2,self.up3,self.up4)
+    def forward(self,input):
+        output = self.model(input)
+        return output
+
+
 def create_model(args):
-    netEncoder= encoder(args)
-    netDecoder = decoder(args)
+    # netEncoder= encoder(args)
+    # netDecoder = decoder(args)
+    CAE = conventional_AE(args)
     # net_N_Dis = N_discriminator(args)
     # net_AN_Dis = AN_discriminator(args)
     # classifier = Classifier(args)
 
 
-    netEncoder = netEncoder.cuda()
-    netDecoder = netDecoder.cuda()
+    # netEncoder = netEncoder.cuda()
+    # netDecoder = netDecoder.cuda()
+    CAE = CAE.cuda()
     # net_N_Dis = net_N_Dis.cuda()
     # net_AN_Dis = net_AN_Dis.cuda()
     # classifier = classifier.cuda()
 
-    init_net(netEncoder)
-    init_net(netDecoder)
+    # init_net(netEncoder)
+    # init_net(netDecoder)
+    init_net(CAE)
     # init_net(net_N_Dis)
     # init_net(net_AN_Dis)
     # init_net(classifier)
 
-    return [netEncoder,netDecoder]#,net_N_Dis]#,net_AN_Dis,classifier]
+    return [CAE] #[netEncoder,netDecoder]#,net_N_Dis]#,net_AN_Dis,classifier]

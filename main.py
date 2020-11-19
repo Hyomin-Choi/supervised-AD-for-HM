@@ -9,30 +9,30 @@ from attention import *
 import wandb
 desc = "project anomaly detection for grad_cam"
 parser = argparse.ArgumentParser(description=desc)
-parser.add_argument('--flag', type=tuple, default=(False,True), help='train and test')
-parser.add_argument('--resume', type=bool, default=True, help='load model')
+parser.add_argument('--flag', type=tuple, default=(True,False), help='train and test')
+parser.add_argument('--resume', type=bool, default=False, help='load model')
 parser.add_argument('--dataroot', type=str, default='E:\eccvw\GAN_based_Anomaly_Detection\Final_model\\548_500_defect\defect_data_2\\', help='dataset_name')
-parser.add_argument('--epoch', type=int, default=200, help='The number of epochs to run')
-parser.add_argument('--start_epoch', type=int, default=200, help='start epoch')
-parser.add_argument('--batch_size', type=int, default=1, help='The size of batch size')
-parser.add_argument('--train_print_freq', type=int, default=5000, help='The number of image_print_freq') #### 1000
-parser.add_argument('--valid_print_freq', type=int, default=1200, help='The number of image_print_freq') #### 1000
+parser.add_argument('--epoch', type=int, default=500, help='The number of epochs to run')
+parser.add_argument('--start_epoch', type=int, default=0, help='start epoch')
+parser.add_argument('--batch_size', type=int, default=100, help='The size of batch size')
+parser.add_argument('--train_print_freq', type=int, default=100, help='The number of image_print_freq') #### 1000
+parser.add_argument('--valid_print_freq', type=int, default=30, help='The number of image_print_freq') #### 1000
 parser.add_argument('--save_freq', type=int, default=10, help='The number of ckpt_save_freq') #### 1000
 #parser.add_argument('--decay_flag', type=str2bool, default=True, help='The decay_flag')
-parser.add_argument('--decay_epoch', type=int, default=50, help='decay epoch') ###### 10
+# parser.add_argument('--decay_epoch', type=int, default=50, help='decay epoch') ###### 10
 
 parser.add_argument('--lr', type=float, default=0.0001, help='The learning rate')
 parser.add_argument('--L1_loss', type=float, default=1.0, help='Weight about L1_weight')
-parser.add_argument('--ABC_loss', type=float, default=3.0, help='Weight about ABC loss')
-parser.add_argument('--N_adv_loss_G', type=float, default=1.0, help='Weight about normal adversarial loss for G')
-parser.add_argument('--N_adv_loss_D', type=float, default=1.0, help='Weight about normal adverarial loss for D')
-parser.add_argument('--Latent_loss', type=float, default=1.0, help='Weight about Latent loss')
+parser.add_argument('--ABC_loss', type=float, default=1.0, help='Weight about ABC loss')
+# parser.add_argument('--N_adv_loss_G', type=float, default=1.0, help='Weight about normal adversarial loss for G')
+# parser.add_argument('--N_adv_loss_D', type=float, default=1.0, help='Weight about normal adverarial loss for D')
+# parser.add_argument('--Latent_loss', type=float, default=1.0, help='Weight about Latent loss')
 # parser.add_argument('--patch_loss', type=float, default=1.5, help='Weight about patch loss')
 # parser.add_argument('--AN_adv_loss_G', type=float, default=1.0, help='Weight about anomaly adversarial loss for G')
 # parser.add_argument('--AN_adv_loss_D', type=float, default=0.5, help='Weight about anomaly adversarial loss for D')
 
-parser.add_argument('--ch_d', type=int, default=64, help='base channel number per layer') # discriminator channel
-parser.add_argument('--ch_g', type=int, default=64, help='base channel number per layer') # generator channel
+parser.add_argument('--ch_d', type=int, default=16, help='base channel number per layer') # discriminator channel
+parser.add_argument('--ch_g', type=int, default=16, help='base channel number per layer') # generator channel
 
 parser.add_argument('--img_size', type=tuple, default=(128,128), help='The size of image')
 parser.add_argument('--img_ch', type=int, default=3, help='The size of image channel')
@@ -52,7 +52,7 @@ parser.add_argument('--sample_dir', type=str, default='samples',
                     help='Directory name to save the samples on training')
 parser.add_argument('--valid_dir', type=str, default='valid',
                     help='Directory name to save the samples on validation')
-parser.add_argument('--folder_name', type=str, default='all data_ABC',
+parser.add_argument('--folder_name', type=str, default='all_data ABC_ori_2',
                     help='Directory name to save the samples on training')
 
 args = parser.parse_args()
@@ -62,14 +62,15 @@ wandb.init(config=hyperparameter,project=desc,name=0,id=args.folder_name,resume=
 
 def main():
     models = create_model(args)
-    wandb.watch(models[0])
-    wandb.watch(models[1])
+    # wandb.watch(models[0])
+    # wandb.watch(models[1])
+    wandb.watch(models)
     # wandb.watch(models[2])
     # wandb.watch(models[3])
     # wandb.watch(models[4])
     if args.resume:
         load_model(args,models=models)
-    optimizer, schedular = create_optimier(model=models, args=args)
+    optimizer = create_optimier(model=models, args=args)
     if args.flag[0]:
         #train
         train_dataloader = load_data(args, train_flag=True)
