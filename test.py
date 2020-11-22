@@ -49,7 +49,8 @@ def test(args=None,models=None,dataloader=None):
         pred = np.array(difference_list)
         fpr1, tpr1, thresholds1 = roc_curve(label, pred, drop_intermediate=False)
         print('auc:{}'.format(auc(fpr1, tpr1)))
-        plt.plot(fpr1, tpr1, 'o-', ms=2, label="AUC:{}".format(auc(fpr1, tpr1)))
+        # plt.rcParams['font.size'] = '16'
+        plt.plot(fpr1, tpr1, 'o-', ms=2, label="AUC(%):{0:0.2f}".format(auc(fpr1, tpr1)*100))
         plt.legend()
         plt.plot([0, 1], [0, 1], 'k--', label="random guess")
         plt.xlabel('False Positive rate(100-Specificity)')

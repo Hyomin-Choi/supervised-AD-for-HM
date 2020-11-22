@@ -109,8 +109,8 @@ class down(nn.Module):
         conv.append(nn.Conv2d(in_channels=in_c,out_channels=out_c,kernel_size=k_size,stride=s_size,padding=p_size,bias=False))
         if BN:
             conv.append(nn.BatchNorm2d(out_c))
-        # conv.append(nn.Tanh())
-        conv.append(nn.LeakyReLU(0.2,True))
+        conv.append(nn.Tanh())
+        # conv.append(nn.LeakyReLU(0.2,True))
         self.conv = nn.Sequential(*conv)
 
     def forward(self,x):
@@ -124,10 +124,11 @@ class up(nn.Module):
                               bias=False))
         if BN:
             deconv.append(nn.BatchNorm2d(out_c))
-        if last:
-            deconv.append(nn.Tanh())
-        else:
-            deconv.append(nn.ReLU(True))
+        deconv.append(nn.Tanh())
+        # if last:
+        #     deconv.append(nn.Tanh())
+        # else:
+        #     deconv.append(nn.ReLU(True))
         self.deconv = nn.Sequential(*deconv)
     def forward(self, x):
         return self.deconv(x)

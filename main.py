@@ -9,14 +9,14 @@ from attention import *
 import wandb
 desc = "project anomaly detection for grad_cam"
 parser = argparse.ArgumentParser(description=desc)
-parser.add_argument('--flag', type=tuple, default=(False,True), help='train and test')
-parser.add_argument('--resume', type=bool, default=True, help='load model')
+parser.add_argument('--flag', type=tuple, default=(True,False), help='train and test')
+parser.add_argument('--resume', type=bool, default=False, help='load model')
 parser.add_argument('--dataroot', type=str, default='E:\eccvw\GAN_based_Anomaly_Detection\Final_model\\548_500_defect\defect_data_2\\', help='dataset_name')
-parser.add_argument('--epoch', type=int, default=500, help='The number of epochs to run')
-parser.add_argument('--start_epoch', type=int, default=261, help='start epoch')
-parser.add_argument('--batch_size', type=int, default=100, help='The size of batch size')
-parser.add_argument('--train_print_freq', type=int, default=100, help='The number of image_print_freq') #### 1000
-parser.add_argument('--valid_print_freq', type=int, default=30, help='The number of image_print_freq') #### 1000
+parser.add_argument('--epoch', type=int, default=300, help='The number of epochs to run')
+parser.add_argument('--start_epoch', type=int, default=0, help='start epoch')
+parser.add_argument('--batch_size', type=int, default=16, help='The size of batch size')
+parser.add_argument('--train_print_freq', type=int, default=10000, help='The number of image_print_freq') #### 1000
+parser.add_argument('--valid_print_freq', type=int, default=3000, help='The number of image_print_freq') #### 1000
 parser.add_argument('--save_freq', type=int, default=10, help='The number of ckpt_save_freq') #### 1000
 #parser.add_argument('--decay_flag', type=str2bool, default=True, help='The decay_flag')
 # parser.add_argument('--decay_epoch', type=int, default=50, help='decay epoch') ###### 10
@@ -52,7 +52,7 @@ parser.add_argument('--sample_dir', type=str, default='samples',
                     help='Directory name to save the samples on training')
 parser.add_argument('--valid_dir', type=str, default='valid',
                     help='Directory name to save the samples on validation')
-parser.add_argument('--folder_name', type=str, default='all_data ABC_ori_2',
+parser.add_argument('--folder_name', type=str, default='all percent ABC_ori_B_16',
                     help='Directory name to save the samples on training')
 
 args = parser.parse_args()
