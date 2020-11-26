@@ -40,9 +40,9 @@ class Custom_dataset(Dataset):
         return max(len(self.files_A), len(self.files_B))
 '''
 def load_data(args,train_flag = False,valid_flag=False,test_flag=False):
-    train_list = [transforms.Grayscale(),transforms.Resize(args.img_size), transforms.RandomHorizontalFlip(p=0.8),transforms.ToTensor(), transforms.Normalize((0.5), (0.5))]
-    valid_list = [transforms.Grayscale(),transforms.Resize(args.img_size), transforms.ToTensor(), transforms.Normalize((0.5), (0.5))]
-    test_list = [transforms.Grayscale(),transforms.Resize(args.img_size), transforms.ToTensor(), transforms.Normalize((0.5), (0.5))]
+    train_list = [transforms.Resize(args.img_size), transforms.RandomHorizontalFlip(p=0.8),transforms.ToTensor(), transforms.Normalize((0.5), (0.5))]#transforms.Grayscale(),
+    valid_list = [transforms.Resize(args.img_size), transforms.ToTensor(), transforms.Normalize((0.5), (0.5))]
+    test_list = [transforms.Resize(args.img_size), transforms.ToTensor(), transforms.Normalize((0.5), (0.5))]
 
 
     dataloader=None
