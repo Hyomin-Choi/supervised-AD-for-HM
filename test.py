@@ -36,12 +36,12 @@ def test(args=None,netEncoder=None,netDecoder=None,netDiscriminator=None,dataloa
                 label_list.append(0)
                 N_difference_list.append(difference)
             real_fake = torch.cat([data, decoder_out], dim=0)
-            if label == 1:
-                save_image(real_fake, os.path.join(args.result_dir, args.folder_name,
-                                                   '{0:04d}_{1:03d}_normal.png'.format(args.start_epoch, idx)), normalize=True)
-            else:
-                save_image(real_fake, os.path.join(args.result_dir, args.folder_name,
-                                                   '{0:04d}_{1:03d}_anomaly.png'.format(args.start_epoch, idx)),normalize=True)
+            # if label == 1:
+            #     save_image(real_fake, os.path.join(args.result_dir, args.folder_name,
+            #                                        '{0:04d}_{1:03d}_normal.png'.format(args.start_epoch, idx)), normalize=True)
+            # else:
+            #     save_image(real_fake, os.path.join(args.result_dir, args.folder_name,
+            #                                        '{0:04d}_{1:03d}_anomaly.png'.format(args.start_epoch, idx)),normalize=True)
         print(difference_list[-1])
         label = np.array(label_list)
         pred = np.array(difference_list)
@@ -56,6 +56,7 @@ def test(args=None,netEncoder=None,netDecoder=None,netDiscriminator=None,dataloa
 
         plt.savefig(os.path.join(args.result_dir, args.folder_name) + '/{}_ROC_curve.png'.format(args.start_epoch))
         plt.show()
+        plt.rcParams.update({'font.size': 22})
         sns.set_style("darkgrid")
         sns.distplot(AN_difference_list, label='Abnormal Scores', rug=False,hist=False)
         sns.distplot(N_difference_list, label='Normal Scores',  rug=False,hist=False)

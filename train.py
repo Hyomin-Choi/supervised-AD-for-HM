@@ -31,6 +31,10 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=
         normal_number = data[label==1].shape[0]
         anomaly_number = data[label==0].shape[0]
 
+        data_n = data[label==1]
+        data_a = data[label==0]
+
+
         if normal_number !=0:
             #update Discriminator
             encoder_out_N = models[0](data[label == 1])  # out6= 512,4,4
@@ -187,30 +191,35 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=
         #     classifier_loss.backward()
         # optimizer[4].step()
         '''
+        if normal_number !=0:
+            real_fake_N = [torch.cat((data_n[i,:].unsqueeze(0),decoder_out_N[i,:].unsqueeze(0),),dim=0)for i in range(normal_number)]
+        if anomaly_number !=0:
+            real_fake_AN = [torch.cat((data_a[i, :].unsqueeze(0), decoder_out_AN[i, :].unsqueeze(0),), dim=0) for i in
+                       range(anomaly_number)]
         if train:
             if idx % args.train_print_freq == 0:
                 # real_fake_attention = create_cam(real=data.cpu(),fake=decoder_out.detach().cpu(),cam=cam.detach().cpu(),epoch=epoch,idx=idx)
 
                 if normal_number !=0:
-                    real_fake_N = torch.cat((data[label==1],decoder_out_N),dim=0)
+                    real_fake_N = torch.cat(real_fake_N[:],dim=0)
                     save_image(real_fake_N, os.path.join(args.sample_dir,args.folder_name,
-                                                    '{0:04d}_{1:03d}_normal.png'.format(epoch, idx)),normalize=True)
+                                                    '{0:04d}_{1:03d}_normal.png'.format(epoch, idx)),nrow=2,normalize=True)
                 if anomaly_number !=0:
-                    real_fake_AN = torch.cat((data[label == 0], decoder_out_AN), dim=0)
+                    real_fake_AN = torch.cat(real_fake_AN[:],dim=0)
                     save_image(real_fake_AN, os.path.join(args.sample_dir, args.folder_name,
-                                                       '{0:04d}_{1:03d}_anomaly.png'.format(epoch, idx)), normalize=True)
+                                                       '{0:04d}_{1:03d}_anomaly.png'.format(epoch, idx)),nrow=2, normalize=True)
         else:
             if idx % args.valid_print_freq == 0:
                 # real_fake_attention = create_cam(real=data.cpu(),fake=decoder_out.detach().cpu(),cam=cam.detach().cpu(),epoch=epoch,idx=idx)
 
                 if normal_number != 0:
-                    real_fake_N = torch.cat((data[label == 1], decoder_out_N), dim=0)
+                    real_fake_N = torch.cat(real_fake_N[:],dim=0)
                     save_image(real_fake_N, os.path.join(args.valid_dir, args.folder_name,
-                                                         '{0:04d}_{1:03d}_normal.png'.format(epoch, idx)), normalize=True)
+                                                         '{0:04d}_{1:03d}_normal.png'.format(epoch, idx)),nrow=2, normalize=True)
                 if anomaly_number != 0:
-                    real_fake_AN = torch.cat((data[label == 0], decoder_out_AN), dim=0)
+                    real_fake_AN = torch.cat(real_fake_AN[:],dim=0)
                     save_image(real_fake_AN, os.path.join(args.valid_dir, args.folder_name,
-                                                          '{0:04d}_{1:03d}_anomaly.png'.format(epoch, idx)), normalize=True)
+                                                          '{0:04d}_{1:03d}_anomaly.png'.format(epoch, idx)), nrow=2,normalize=True)
 
         for n in loss_name:
             try:
