@@ -40,7 +40,7 @@ def train(args=None,models=None,dataloader=None,epoch=None,optimizer=None,train=
             encoder_out_N = models[0](data[label == 1])  # out6= 512,4,4
             decoder_out_N = models[1](*encoder_out_N)
             real_logit = models[2](data[label==1])
-            fake_logit = models[2](decoder_out_N)
+            fake_logit = models[2](decoder_out_N) #1,14,14
             Normal_D_loss = ( ce(real_logit, Variable(torch.ones(real_logit.shape).cuda(), requires_grad=False)) + \
                                     ce(fake_logit, Variable(torch.zeros(fake_logit.shape).cuda(), requires_grad=False))
                             ) * 0.5
