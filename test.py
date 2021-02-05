@@ -57,14 +57,14 @@ def test(args=None,netEncoder=None,netDecoder=None,netDiscriminator=None,dataloa
 
         #plt.savefig(os.path.join(args.result_dir, args.folder_name) + '/{}_ROC_curve.png'.format(args.start_epoch))
         plt.show()
-        plt.rcParams.update({'font.size': 12})
+        plt.rcParams.update({'font.size': 21})
         sns.set_style("darkgrid")
-        sns.distplot(AN_difference_list, label='Abnormal Scores', rug=False,hist=False)
-        sns.distplot(N_difference_list, label='Normal Scores',  rug=False,hist=False)
+        sns.distplot(AN_difference_list,  rug=False,hist=False)#label='Abnormal Scores',
+        sns.distplot(N_difference_list,   rug=False,hist=False)#label='Normal Scores',
         # sns.kdeplot(AN_difference_list,label = 'Abnormal Scores',shade=True)#,shade=True)
         # sns.kdeplot(N_difference_list, label='Normal Scores', shade=True)
         plt.legend()
-        #plt.savefig(os.path.join(args.result_dir, args.folder_name) + '/{}_distplot_font12.png'.format(args.start_epoch))
+        plt.savefig(os.path.join(args.result_dir, args.folder_name) + '/{}_distplot_font21.png'.format(args.start_epoch))
         plt.show()
 
         mean_std.append(np.mean(N_difference_list))

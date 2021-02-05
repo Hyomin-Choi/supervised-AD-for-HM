@@ -7,12 +7,12 @@ from utils import *
 from test import *
 from attention import *
 import wandb
-desc = "project anomaly detection for grad_cam"
+desc = "project anomaly detection for grad_cam_test"
 parser = argparse.ArgumentParser(description=desc)
-parser.add_argument('--flag', type=tuple, default=(False,True), help='train and test')
-parser.add_argument('--resume', type=bool, default=True, help='load model')
-parser.add_argument('--dataroot', type=str, default='E:\hyo_min\dataset\\fashion_mnist\\', help='dataset_name')
-parser.add_argument('--epoch', type=int, default=200, help='The number of epochs to run')
+parser.add_argument('--flag', type=tuple, default=(True,False), help='train and test')
+parser.add_argument('--resume', type=bool, default=False, help='load model')
+parser.add_argument('--dataroot', type=str, default='E:\eccvw\GAN_based_Anomaly_Detection\Final_model\\548_500_defect\defect_data_2\\', help='dataset_name')
+parser.add_argument('--epoch', type=int, default=0, help='The number of epochs to run')
 parser.add_argument('--start_epoch', type=int, default=200, help='start epoch')
 parser.add_argument('--batch_size', type=int, default=1, help='The size of batch size')
 parser.add_argument('--train_print_freq', type=int, default=5000, help='The number of image_print_freq') #### 1000
@@ -34,8 +34,8 @@ parser.add_argument('--Latent_loss', type=float, default=1.0, help='Weight about
 parser.add_argument('--ch_d', type=int, default=64, help='base channel number per layer') # discriminator channel
 parser.add_argument('--ch_g', type=int, default=64, help='base channel number per layer') # generator channel
 
-parser.add_argument('--img_size', type=tuple, default=(32,32), help='The size of image')
-parser.add_argument('--img_ch', type=int, default=1, help='The size of image channel')
+parser.add_argument('--img_size', type=tuple, default=(128,128), help='The size of image')
+parser.add_argument('--img_ch', type=int, default=3, help='The size of image channel')
 parser.add_argument('--k_size', type=int, default=4, help='kernel size')
 parser.add_argument('--patch_size', type=int, default=32, help='The size of image patch')   # 1~9
 parser.add_argument('--stride', type=int, default=16, help='The size of sliding patch stride size')
@@ -52,12 +52,12 @@ parser.add_argument('--sample_dir', type=str, default='samples',
                     help='Directory name to save the samples on training')
 parser.add_argument('--valid_dir', type=str, default='valid',
                     help='Directory name to save the samples on validation')
-parser.add_argument('--folder_name', type=str, default='fashionM ours',
+parser.add_argument('--folder_name', type=str, default='all_data_2_test',
                     help='Directory name to save the samples on training')
 
 args = parser.parse_args()
 hyperparameter = dict_hyperparameter(args)
-wandb.init(config=hyperparameter,project=desc,name=0,id=args.folder_name,resume=args.resume)
+wandb.init(config=hyperparameter,project=desc,name=args.folder_name,id=0,resume=args.resume)
 
 
 def main():
