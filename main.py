@@ -9,10 +9,10 @@ from attention import *
 import wandb
 desc = "project anomaly detection for grad_cam_test"
 parser = argparse.ArgumentParser(description=desc)
-parser.add_argument('--flag', type=tuple, default=(True,False), help='train and test')
-parser.add_argument('--resume', type=bool, default=False, help='load model')
+parser.add_argument('--flag', type=tuple, default=(False,True), help='train and test')
+parser.add_argument('--resume', type=bool, default=True, help='load model')
 parser.add_argument('--dataroot', type=str, default='E:\eccvw\GAN_based_Anomaly_Detection\Final_model\\548_500_defect\defect_data_2\\', help='dataset_name')
-parser.add_argument('--epoch', type=int, default=0, help='The number of epochs to run')
+parser.add_argument('--epoch', type=int, default=200, help='The number of epochs to run')
 parser.add_argument('--start_epoch', type=int, default=200, help='start epoch')
 parser.add_argument('--batch_size', type=int, default=1, help='The size of batch size')
 parser.add_argument('--train_print_freq', type=int, default=5000, help='The number of image_print_freq') #### 1000
