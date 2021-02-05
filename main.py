@@ -9,11 +9,11 @@ from attention import *
 import wandb
 desc = "project anomaly detection for grad_cam"
 parser = argparse.ArgumentParser(description=desc)
-parser.add_argument('--flag', type=tuple, default=(True,False,False), help='train, test, attention')
-parser.add_argument('--resume', type=bool, default=False, help='load model')
-parser.add_argument('--dataroot', type=str, default='D:\PycharmProjects\defect_for_ad/', help='dataset_name')
+parser.add_argument('--flag', type=tuple, default=(False,True,False), help='train, test, attention')
+parser.add_argument('--resume', type=bool, default=True, help='load model')
+parser.add_argument('--dataroot', type=str, default='/home/intlab/e_drive/eccvw/GAN_based_Anomaly_Detection/Final_model/548_500_defect/defect_data_2/', help='dataset_name')
 parser.add_argument('--epoch', type=int, default=200, help='The number of epochs to run')
-parser.add_argument('--start_epoch', type=int, default=0, help='start epoch')
+parser.add_argument('--start_epoch', type=int, default=200, help='start epoch')
 parser.add_argument('--batch_size', type=int, default=1, help='The size of batch size')
 parser.add_argument('--print_freq', type=int, default=1000, help='The number of image_print_freq') #### 1000
 parser.add_argument('--save_freq', type=int, default=10, help='The number of ckpt_save_freq') #### 1000
@@ -54,21 +54,21 @@ parser.add_argument('--train_attention_dir', type=str, default='train_attention'
 parser.add_argument('--test_attention_dir', type=str, default='test_attention',
                     help='Directory name to save the test_attention on test')
 
-parser.add_argument('--folder_name', type=str, default='k_means_layer_4_4',
+parser.add_argument('--folder_name', type=str, default='all_data_2',
                     help='Directory name to save the samples on training')
 
 args = parser.parse_args()
 hyperparameter = dict_hyperparameter(args)
-wandb.init(config=hyperparameter,project=desc,name=0,id='4',resume=False)
+#wandb.init(config=hyperparameter,project=desc,name=0,id='4',resume=False)
 
 
 def main():
     models = create_model(args)
-    wandb.watch(models[0])
-    wandb.watch(models[1])
-    wandb.watch(models[2])
-    wandb.watch(models[3])
-    wandb.watch(models[4])
+    # wandb.watch(models[0])
+    # wandb.watch(models[1])
+    # wandb.watch(models[2])
+    # wandb.watch(models[3])
+    # wandb.watch(models[4])
     if args.resume:
         load_model(args,models=models)
         optimizer, schedular = create_optimier(model=models, args=args)
@@ -94,7 +94,7 @@ def main():
     if args.flag[2]:
         train_dataloader = load_data(args, train_flag=True)
         attention(models=models,args=args,dataloader=train_dataloader,train=True)
-    wandb.save(os.path.join(wandb.run.dir, "checkpoint*"))
+    #wandb.save(os.path.join(wandb.run.dir, "checkpoint*"))
 if __name__ == '__main__':
     create_folder(args)
     save_hyper_params(args)
