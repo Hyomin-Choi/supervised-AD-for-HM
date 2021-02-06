@@ -56,7 +56,8 @@ def test(args=None,netEncoder=None,netDecoder=None,netDiscriminator=None,dataloa
 
         plt.savefig(os.path.join(args.result_dir, args.folder_name) + '/{}_ROC_curve.png'.format(args.start_epoch))
         plt.show()
-        sns.set(font_scale=2)
+        #sns.set(font_scale=2)
+        plt.rcParams.update({'font.size': 21})
         sns.set_style("darkgrid")
         sns.distplot(AN_difference_list, label='Abnormal Scores', rug=False,hist=False,kde_kws={'linestyle':'--'})
         sns.distplot(N_difference_list, label='Normal Scores',  rug=False,hist=False)
