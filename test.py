@@ -60,14 +60,14 @@ def test(args=None,models=None,dataloader=None):
 
         #plt.savefig(os.path.join(args.result_dir, args.folder_name) + '/{}_ROC_curve.png'.format(args.start_epoch))
         plt.show()
-        plt.rcParams.update({'font.size': 21})
-        sns.set_style("darkgrid")
-        sns.distplot(AN_difference_list, rug=False,hist=False) #label='Abnormal Scores'
-        sns.distplot(N_difference_list,   rug=False,hist=False) #label='Normal Scores',
-        # sns.kdeplot(AN_difference_list,label = 'Abnormal Scores',shade=True)#,shade=True)
-        # sns.kdeplot(N_difference_list, label='Normal Scores', shade=True)
+        plt.rcParams.update({'font.size': 12})
+        sns.set_style("white")
+        sns.distplot(AN_difference_list, rug=False,hist=False,kde_kws={'linestyle':'--','linewidth':'5'}, label='Abnormal Scores')
+        sns.distplot(N_difference_list,   rug=False,hist=False,kde_kws={'linewidth':'5'} ,label='Normal Scores')
+        #sns.kdeplot(AN_difference_list,label = 'Abnormal Scores',shade=False)#,shade=True)
+        #sns.kdeplot(N_difference_list, label='Normal Scores', shade=False)
         plt.legend()
-        plt.savefig(os.path.join(args.result_dir, args.folder_name) + '/{}_distplot.png'.format(args.start_epoch))
+        #plt.savefig(os.path.join(args.result_dir, args.folder_name) + '/{}_distplot.png'.format(args.start_epoch))
         plt.show()
 
         mean_std.append(np.mean(N_difference_list))
@@ -75,16 +75,16 @@ def test(args=None,models=None,dataloader=None):
         mean_std.append(np.mean(AN_difference_list))
         mean_std.append(np.std(AN_difference_list))
 
-        if not os.path.isfile(args.result_dir + '/' + args.folder_name +'/mean_std_value.txt'):
-            with open(args.result_dir + '/' + args.folder_name + '/mean_std_value.txt', 'w') as f:
-                for i in range(2):
-                    if i == 0:
-                        f.write('Nomral')
-                    else:
-                        f.write('Abnormal')
-                    f.write('\n')
-                    f.write('mean:{0}, std:{1}'.format(mean_std[i*2],mean_std[i*2+1]))
-                    f.write('\n')
+        # if not os.path.isfile(args.result_dir + '/' + args.folder_name +'/mean_std_value.txt'):
+        #     with open(args.result_dir + '/' + args.folder_name + '/mean_std_value.txt', 'w') as f:
+        #         for i in range(2):
+        #             if i == 0:
+        #                 f.write('Nomral')
+        #             else:
+        #                 f.write('Abnormal')
+        #             f.write('\n')
+        #             f.write('mean:{0}, std:{1}'.format(mean_std[i*2],mean_std[i*2+1]))
+        #             f.write('\n')
 
 
 

@@ -11,9 +11,9 @@ desc = "project anomaly detection for grad_cam"
 parser = argparse.ArgumentParser(description=desc)
 parser.add_argument('--flag', type=tuple, default=(False,True), help='train and test')
 parser.add_argument('--resume', type=bool, default=True, help='load model')
-parser.add_argument('--dataroot', type=str, default='E:\eccvw\GAN_based_Anomaly_Detection\Final_model\\548_500_defect\defect_data_2\\', help='dataset_name')
+parser.add_argument('--dataroot', type=str, default='/home/intlab/e_drive/eccvw/GAN_based_Anomaly_Detection/Final_model/548_500_defect/defect_data_2/', help='dataset_name')
 parser.add_argument('--epoch', type=int, default=200, help='The number of epochs to run')
-parser.add_argument('--start_epoch', type=int, default=301, help='start epoch')
+parser.add_argument('--start_epoch', type=int, default=201, help='start epoch')
 parser.add_argument('--batch_size', type=int, default=100, help='The size of batch size')
 parser.add_argument('--train_print_freq', type=int, default=1000, help='The number of image_print_freq') #### 1000
 parser.add_argument('--valid_print_freq', type=int, default=200, help='The number of image_print_freq') #### 1000
@@ -53,18 +53,18 @@ parser.add_argument('--sample_dir', type=str, default='samples',
 parser.add_argument('--valid_dir', type=str, default='valid',
                     help='Directory name to save the samples on validation')
 parser.add_argument('--folder_name', type=str, default='all_data ABC_ori_3',
-                    help='Directory name to save the samples on training')
+                    help='Directory name to save the samples on training') #all_data ABC_ori_3
 
 args = parser.parse_args()
 hyperparameter = dict_hyperparameter(args)
-wandb.init(config=hyperparameter,project=desc,name=0,id=args.folder_name,resume=args.resume)
+#wandb.init(config=hyperparameter,project=desc,name=0,id=args.folder_name,resume=args.resume)
 
 
 def main():
     models = create_model(args)
     # wandb.watch(models[0])
     # wandb.watch(models[1])
-    wandb.watch(models)
+    #wandb.watch(models)
     # wandb.watch(models[2])
     # wandb.watch(models[3])
     # wandb.watch(models[4])
@@ -94,7 +94,7 @@ def main():
         test_dataloader = load_data(args,test_flag=True)
         test(args,models=models,dataloader=test_dataloader)
 
-    wandb.save(os.path.join(wandb.run.dir, "checkpoint*"))
+    #wandb.save(os.path.join(wandb.run.dir, "checkpoint*"))
 if __name__ == '__main__':
     create_folder(args)
     save_hyper_params(args)
